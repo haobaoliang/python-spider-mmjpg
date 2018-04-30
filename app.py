@@ -15,12 +15,15 @@ class MMPic():
 
     def save_img(self, url, file_name):
         print('开始请求图片地址')
-        img = self.request(url)
-        print('开始保存图片')
-        f = open(file_name, 'ab')
-        f.write(img.content)
-        print(file_name, '图片保存成功')
-        f.close()
+        try:
+            img = self.request(url)
+            print('开始保存图片')
+            f = open(file_name, 'ab')
+            f.write(img.content)
+            print(file_name, '图片保存成功')
+            f.close()
+        except OSError:
+            pass
 
     def get_files(self, path):
         pic_names = os.listdir(path)
@@ -52,11 +55,10 @@ class MMPic():
         for a in all_a:
             a_url = a.find('a')['href']
             print('爬虫网页', a_url)
-            self.spider_page(a_url)
+            self.spider_page(a_url, driver)
 
-    def spider_page(self, page_url):
+    def spider_page(self, page_url, driver_page):
         # print('爬虫每一个网页')
-        driver_page = webdriver.PhantomJS()
         driver_page.get(page_url)
         html_page = driver_page.page_source
         html_parse = BeautifulSoup(html_page, 'lxml')
@@ -68,12 +70,11 @@ class MMPic():
         page_total = int(html_parse.find(id='opic').previous_sibling.string)
         print(page_total)
         for i in range(page_total):
-            driver_pic_index = webdriver.PhantomJS()
-            driver_pic_index.get(page_url + '/' + str(i+1))
-            pic_index = driver_pic_index.page_source
+            driver_page.get(page_url + '/' + str(i + 1))
+            pic_index = driver_page.page_source
             pic_src = BeautifulSoup(pic_index, 'lxml').find(id='content').img.attrs['src']
             print(pic_src)
-            pic_name = pic_src[pic_src.rfind('/')+1:]i  #根据pic_src获取图片的名称
+            pic_name = pic_src[pic_src.rfind('/')+1:]  #根据pic_src获取图片的名称
             if pic_src in file_names:
                 print('图片已经存在，不在重复下载')
             else:
